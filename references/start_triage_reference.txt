@@ -1,0 +1,72 @@
+FIELDMEDIC OFFLINE REFERENCE
+START ADULT MASS-CASUALTY TRIAGE
+
+PURPOSE
+This reference summarizes the START (Simple Triage and Rapid Treatment)
+adult mass-casualty triage framework for the FieldMedic demonstration.
+
+This is decision-support reference material only.
+FieldMedic does not replace trained medical judgment, EMS protocols,
+incident command, or emergency medical services.
+
+SOURCE
+U.S. Department of Health and Human Services
+Chemical Hazards Emergency Medical Management (CHEMM)
+START Adult Triage Algorithm
+https://chemm.hhs.gov/incident-primer/triage/start-triage
+
+Radiation Emergency Medical Management (REMM)
+START Adult Triage Algorithm: Text Version
+https://remm.hhs.gov/startalgotext.htm
+
+TRIAGE TAGS
+
+RED - IMMEDIATE
+Patient has severe or life-threatening injuries requiring immediate
+treatment and transportation.
+
+YELLOW - DELAYED
+Patient has serious injuries, but immediate treatment or transportation
+can be delayed based on the triage assessment.
+
+GREEN - MINOR
+Patient has relatively minor injuries and is unlikely to deteriorate
+rapidly. Ambulatory patients may fall into this category during START
+triage.
+
+BLACK - EXPECTANT
+Patient is deceased or unlikely to survive given injury severity,
+available resources, or both.
+
+START ASSESSMENT FACTORS
+
+START considers:
+
+1. Ability to walk
+2. Presence or absence of spontaneous breathing
+3. Respiratory rate
+4. Perfusion, such as radial pulse or capillary refill
+5. Mental status, including ability to obey commands
+
+A respiratory rate greater than 30 breaths per minute is one finding
+used by the START adult algorithm when determining triage category.
+
+IMPORTANT LIMITATIONS
+
+Triage is dynamic. A patient's condition may change and reassessment
+may be necessary.
+
+START is intended for mass-casualty triage. It is not a complete
+individual diagnostic system.
+
+FieldMedic must not claim that its output is a confirmed diagnosis.
+
+FieldMedic must not fabricate information that was not entered by
+the responder.
+
+When FieldMedic identifies insufficient information, it should say so
+rather than infer missing clinical findings.
+
+REFERENCE VERSION
+Prepared for the FieldMedic competition prototype.
+Source material checked October 31, 2026.
