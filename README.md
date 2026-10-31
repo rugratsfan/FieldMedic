@@ -1,19 +1,18 @@
 # FieldMedic
-# FieldMedic
 
 **Offline Open-Weight AI Decision Support for Disaster Response**
 
 FieldMedic is a disaster-response decision-support prototype built around a locally running open-weight AI model.
 
-In disaster environments, internet connectivity and access to medical infrastructure may be limited or unavailable. FieldMedic is designed to help responders organize patient observations, identify dangerous findings, retrieve relevant offline reference material, and generate a structured assessment without requiring cloud-based AI inference.
+During disasters, internet connectivity and access to normal medical infrastructure may become limited or unavailable. FieldMedic explores how local AI can help responders organize patient observations, identify dangerous findings, retrieve relevant offline reference material, and generate structured assessments without relying on cloud-based AI inference.
 
-> FieldMedic is a prototype and is not a medical device. It does not provide confirmed diagnoses and should not replace emergency medical services, trained medical professionals, or established emergency-response protocols.
+> **Important:** FieldMedic is a competition and educational prototype. It is not a medical device, does not provide confirmed diagnoses, and must not replace emergency medical services, trained medical professionals, or established emergency-response protocols.
 
 ---
 
-## The Problem
+# The Problem
 
-During disasters, responders may face:
+Disaster environments can involve:
 
 - Limited or nonexistent internet access
 - Overwhelmed medical infrastructure
@@ -21,23 +20,22 @@ During disasters, responders may face:
 - Limited personnel
 - Limited time for patient assessment
 - Difficulty accessing reference material
+- Limited access to cloud-based AI systems
 
-Many modern AI applications depend entirely on cloud infrastructure.
+Many modern AI applications rely completely on cloud infrastructure.
 
 FieldMedic takes a different approach:
 
-**The core AI system runs locally.**
-
-This means the primary FieldMedic analysis pipeline can continue operating without cloud AI inference.
+> **The core AI analysis runs locally.**
 
 ---
 
-## What FieldMedic Does
+# What FieldMedic Does
 
-A responder enters information such as:
+A responder enters patient observations such as:
 
 - Age
-- Symptoms and observations
+- Symptoms
 - Heart rate
 - Respiratory rate
 - Blood pressure
@@ -47,17 +45,17 @@ A responder enters information such as:
 - Severe or uncontrolled bleeding
 - Additional observations
 
-FieldMedic then combines several components:
+FieldMedic then combines:
 
 1. Deterministic safety checks
 2. Offline reference retrieval
 3. Local open-weight AI analysis
 4. Structured assessment generation
-5. Web-based interface
-6. Optional Telegram mobile interface
-7. Optional voice output
+5. A Streamlit web interface
+6. An optional Telegram mobile interface
+7. Optional ElevenLabs voice output
 
-The resulting assessment can include:
+FieldMedic can return:
 
 - Suggested triage priority
 - Danger signs
@@ -70,644 +68,1260 @@ The resulting assessment can include:
 
 ---
 
+# Why Open-Weight AI?
+
+The AI is not an additional feature added on top of FieldMedic.
+
+It is a central component of the application.
+
+FieldMedic uses a Gemma model running locally through Ollama.
+
+The model helps:
+
+- Organize responder observations
+- Interpret supplied patient context
+- Identify possible concerns
+- Generate structured output
+- Explain why observations may be important
+- Incorporate retrieved local reference material
+
+The deterministic safety system remains separate from the language model so selected critical findings do not depend exclusively on generative AI.
+
+---
+
 # Architecture
 
 ```text
-                 FieldMedic
-                     |
-           +---------+---------+
-           |                   |
-      Streamlit Web        Telegram
-        Interface             Bot
-           |                   |
-           +---------+---------+
-                     |
-                     v
-              Safety Engine
-                     |
-                     v
-          Offline Reference Search
-                     |
-                     v
-             Local AI Model
-               via Ollama
-                     |
-                     v
-          Structured Assessment
-                     |
-          +----------+----------+
-          |                     |
-       Website              Telegram
-          |
-       Optional
-    ElevenLabs Voice
-# Complete Setup Guide
- 
-The following instructions explain how to set up FieldMedic from a fresh computer.
- 
+                       FieldMedic
+                           |
+               +-----------+-----------+
+               |                       |
+        Streamlit Website          Telegram Bot
+               |                       |
+               +-----------+-----------+
+                           |
+                           v
+                  Deterministic
+                   Safety Layer
+                           |
+                           v
+                    Local Offline
+                 Reference Retrieval
+                           |
+                           v
+                      Gemma Model
+                     through Ollama
+                           |
+                           v
+                  Structured Assessment
+                           |
+               +-----------+-----------+
+               |                       |
+            Website                  Telegram
+               |
+               v
+      Optional ElevenLabs Voice
+```
+
 ---
- 
-## 1. Install Python
- 
-FieldMedic requires Python.
- 
-Download and install Python from:
- 
-https://www.python.org/downloads/
- 
-During installation on Windows, make sure you check:
- 
+
+# Core Features
+
+## Local AI Inference
+
+FieldMedic runs the configured Gemma model locally through Ollama.
+
+Core patient analysis therefore does not require a cloud AI inference API.
+
+---
+
+## Deterministic Safety Layer
+
+Before generative AI results are presented, FieldMedic checks selected reported measurements and observations using normal Python logic.
+
+The prototype can flag observations such as:
+
+- Reported severe or uncontrolled bleeding
+- Altered mental status
+- Very low systolic blood pressure
+- Very low oxygen saturation
+- Extremely high or low heart rate
+- Extremely high or low respiratory rate
+
+For selected high-risk findings, the deterministic system can force escalation regardless of what the language model generates.
+
+This means the architecture is:
+
 ```text
-Add Python to PATH
+Patient Observations
+        |
+        v
+Deterministic Safety Checks
+        |
+        v
+Offline Reference Search
+        |
+        v
+Local Gemma Model
+        |
+        v
+Structured Assessment
+```
 
-After installation, open PowerShell and verify:
+This safety layer is a prototype and does not constitute a validated clinical triage algorithm.
 
-PowerShell
-python --version
+---
 
-You should see a Python version number.
+# Offline Reference Retrieval
 
-2. Install Git
+FieldMedic includes a simple offline reference-retrieval system.
 
-Download Git from:
+Reference files are stored inside:
 
-https://git-scm.com/downloads
-
-
-After installation, verify:
-
-```powershell
-git --version
-
-3. Install Ollama
-
-FieldMedic uses Ollama to run the open-weight AI model locally.
-
-Download Ollama from:
-
-https://ollama.com/download
-
-
-Confirm the installation:
-
-```powershell
-ollama --version
-
-
-If the command is not recognized, restart your terminal or computer after installing Ollama.
-
-4. Download the AI Model
-
-FieldMedic is configured to use Gemma through Ollama.
-
-Run:
-
-PowerShell
-ollama pull gemma4
-
-This may take several minutes depending on your internet speed and computer.
-
-After the download completes, verify the model:
-
-PowerShell
-ollama list
- 
-
-You should see gemma4 in the list.
-
-Test the model:
-
-PowerShell
-ollama run gemma4
-
-Enter:
-
-Plain Text
-Hello
-
-If the model responds, Ollama is working.
-
-Exit with:
-
-Plain Text
-/bye
-
-IMPORTANT:
-
-The model name in ai.py must exactly match the model installed in Ollama.
+```text
+references/
+```
 
 For example:
 
-Python
-model="gemma4"
-
-If you change models, change this value in ai.py as well.
-
-5. Download FieldMedic
-
-Clone the repository:
-
-PowerShell
-git clone YOUR_GITHUB_REPOSITORY_URL
-
-Then:
-
-PowerShell
-cd FieldMedic
-
-Alternatively, download the repository as a ZIP file from GitHub and extract it.
-
-On Windows, a short folder path is recommended:
-
-Plain Text
-C:\FieldMedic
-
-This can help avoid Windows path-length problems with some Python packages.
-
-6. Create the Virtual Environment
-
-From inside the FieldMedic folder:
-
-PowerShell
-python -m venv .venv
-
-Activate it:
-
-PowerShell
-.venv\Scripts\Activate.ps1
-
-If Windows reports:
-
-Plain Text
-running scripts is disabled on this system
-
-run:
-
-PowerShell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-
-Then try again:
-
-PowerShell
-.venv\Scripts\Activate.ps1
-
-Once activated, the terminal should look similar to:
-
-Plain Text
-(.venv) PS C:\FieldMedic>
-
-Do not type the:
-
-Plain Text
-(.venv) PS C:\FieldMedic>
-
-portion yourself. PowerShell displays it automatically.
-
-7. Upgrade pip
-
-Run:
-
-PowerShell
-python -m pip install --upgrade pip
-8. Install FieldMedic Dependencies
-
-Run:
-
-PowerShell
-pip install -r requirements.txt
-
-The project uses packages including:
-
-Plain Text
-streamlit
-ollama
-pydantic
-python-dotenv
-python-telegram-bot
-elevenlabs
-
-If ElevenLabs causes an installation problem and you do not need voice output, it can be removed temporarily because voice is not required for the core FieldMedic system.
-
-9. Check the Offline Reference Library
-
-Make sure the project contains:
-
-Plain Text
-FieldMedic/
+```text
+references/
 |
-+-- references/
-|
++-- README.txt
 +-- start_triage_reference.txt
+```
 
-FieldMedic searches this directory for offline reference material.
+FieldMedic searches these local files for material related to the observations entered by the responder.
 
-Additional reference files can be placed here as .txt files.
+Relevant content is then supplied to the local model as additional context.
 
-Only use authoritative reference material that you are legally allowed to store and redistribute.
+This gives FieldMedic a basic local Retrieval-Augmented Generation, or RAG, pipeline:
 
-10. Check the Python Files
+```text
+Patient Information
+        |
+        v
+Local Search
+        |
+        v
+Relevant References
+        |
+        v
+Gemma
+        |
+        v
+Assessment
+```
 
-Before starting FieldMedic, you can check for basic syntax errors:
+Reference material should come from authoritative sources and include the title, publisher, version/date, and original source.
 
-PowerShell
-python -m py_compile app.py ai.py safety.py references.py telegram_bot.py
+Do not redistribute copyrighted or restricted reference material without permission.
 
-If this command displays nothing, the files passed Python's syntax check.
+---
 
-If Python shows an error, fix that error before proceeding.
+# Streamlit Web Interface
 
-Running the Website
-11. Start FieldMedic
+The main FieldMedic interface is built with Streamlit.
 
-Make sure your terminal begins with:
+It allows the responder to enter patient observations and receive a structured result containing:
 
-Plain Text
-(.venv)
+```text
+Suggested Priority
+Danger Signs
+Possible Concerns
+Check Next
+Recommended Escalation
+Reasoning
+Offline References
+Limitations
+```
 
-Then run:
+The Streamlit application can run locally on the same computer as FieldMedic.
 
-PowerShell
-streamlit run app.py
+---
 
-Your browser should open automatically.
+# Telegram Interface
 
-If it does not, Streamlit will display an address similar to:
+FieldMedic includes an optional Telegram bot.
 
-Plain Text
-http://localhost:8501
+This allows a user to send structured observations from a phone when network connectivity is available.
 
-Open that address in your browser.
+Example:
 
-Keep the terminal open while using FieldMedic.
+```text
+/analyze age=22; hr=128; rr=28; bp=85/55; o2=94; symptoms=dizzy and confused; injuries=deep leg wound; altered=yes; bleeding=yes
+```
 
-To stop the application, click the terminal and press:
+The Telegram interface connects to the same FieldMedic analysis pipeline.
 
-Plain Text
-Ctrl + C
-Telegram Setup
+## Important Privacy Limitation
 
-Telegram support is optional.
+Telegram itself requires internet connectivity.
 
-The main FieldMedic website does not require Telegram.
+Therefore:
 
-12. Create a Telegram Bot
+```text
+Gemma inference             LOCAL
+Ollama                      LOCAL
+Safety checks               LOCAL
+Reference retrieval         LOCAL
+Local Streamlit interface   LOCAL
 
-Open Telegram and search for:
+Telegram                    CONNECTED
+ElevenLabs                  CONNECTED
+```
 
-Plain Text
-@BotFather
+Do not claim that the entire Telegram workflow is offline.
 
-Send:
+Do not transmit real personally identifiable patient information through the demonstration Telegram bot.
 
-Plain Text
-/newbot
+---
 
-Follow the instructions.
+# Optional Voice Output
 
-BotFather will ask you for:
-
-A display name
-A unique bot username
-
-The username normally ends in:
-
-Plain Text
-bot
+FieldMedic can optionally use ElevenLabs to turn limited assessment information into speech.
 
 For example:
 
-Plain Text
-FieldMedicDemoBot
+```text
+Suggested priority: IMMEDIATE.
+Recommended escalation: ...
+```
 
-BotFather will then provide a bot token.
+This feature may be useful for hands-free interaction.
 
-Treat this token like a password.
+However, ElevenLabs is an external connected service.
 
-DO NOT upload it to GitHub.
+Voice is optional and is not required for the core FieldMedic system.
 
-13. Create .env
+---
 
-Inside the main FieldMedic folder create:
+# Technology Stack
 
-Plain Text
-.env
+FieldMedic uses:
 
-Add:
+- Python
+- Gemma
+- Ollama
+- Streamlit
+- Pydantic
+- python-telegram-bot
+- python-dotenv
+- ElevenLabs, optional
 
-Plain Text
-TELEGRAM_BOT_TOKEN=PASTE_YOUR_TOKEN_HERE
+---
 
-If using ElevenLabs, you can also add:
+# Project Structure
 
-Plain Text
-ELEVENLABS_API_KEY=PASTE_YOUR_KEY_HERE
-ELEVENLABS_VOICE_ID=YOUR_VOICE_ID
-
-Example folder structure:
-
-Plain Text
+```text
 FieldMedic/
 |
 +-- app.py
 +-- ai.py
 +-- safety.py
 +-- references.py
-+-- telegram_bot.py
 +-- voice.py
++-- telegram_bot.py
 +-- requirements.txt
++-- README.md
 +-- .env
 +-- .gitignore
 |
 +-- references/
+    |
+    +-- README.txt
+    +-- start_triage_reference.txt
+```
+
+## File Responsibilities
+
+### `app.py`
+
+Runs the Streamlit web application.
+
+### `ai.py`
+
+Communicates with the locally running Gemma model and builds the structured FieldMedic assessment.
+
+### `safety.py`
+
+Contains deterministic safety checks.
+
+### `references.py`
+
+Searches the offline reference library.
+
+### `telegram_bot.py`
+
+Provides the optional Telegram mobile interface.
+
+### `voice.py`
+
+Provides optional ElevenLabs speech generation.
+
+### `.env`
+
+Contains API tokens and secrets.
+
+**Never upload `.env` to GitHub.**
+
+---
+
+# Complete Installation Guide
+
+The following instructions assume a new user is setting up FieldMedic on Windows.
+
+---
+
+## Step 1: Install Python
+
+Install a recent Python 3 version.
+
+During installation on Windows, enable:
+
+```text
+Add Python to PATH
+```
+
+Open PowerShell and confirm:
+
+```powershell
+python --version
+```
+
+A Python version number should appear.
+
+---
+
+# Step 2: Install Git
+
+Install Git if you intend to clone FieldMedic from GitHub.
+
+Confirm:
+
+```powershell
+git --version
+```
+
+---
+
+# Step 3: Install Ollama
+
+Install Ollama.
+
+After installation, restart PowerShell or VS Code if necessary.
+
+Confirm:
+
+```powershell
+ollama --version
+```
+
+---
+
+# Step 4: Download Gemma
+
+FieldMedic requires the Ollama model specified inside `ai.py`.
+
+For the current configuration:
+
+```powershell
+ollama pull gemma4
+```
+
+The model download may be relatively large and may take some time.
+
+Verify your installed Ollama models:
+
+```powershell
+ollama list
+```
+
+Make sure you see the model that FieldMedic is configured to use.
+
+Test it:
+
+```powershell
+ollama run gemma4
+```
+
+Enter:
+
+```text
+Hello
+```
+
+If Gemma generates a response, local inference is working.
+
+Exit the interactive session with:
+
+```text
+/bye
+```
+
+---
+
+# Step 5: Download FieldMedic
+
+Clone the repository:
+
+```powershell
+git clone YOUR_GITHUB_REPOSITORY_URL
+```
+
+Then enter the project:
+
+```powershell
+cd FieldMedic
+```
+
+Alternatively:
+
+1. Open the GitHub repository.
+2. Select **Code**.
+3. Select **Download ZIP**.
+4. Extract the ZIP.
+5. Open the extracted FieldMedic directory in VS Code.
+
+## Windows Recommendation
+
+Use a short directory such as:
+
+```text
+C:\FieldMedic
+```
+
+instead of:
+
+```text
+C:\Users\YourName\OneDrive - Organization\Documents\FieldMedic
+```
+
+A shorter path can avoid Windows path-length problems with deeply nested Python packages.
+
+---
+
+# Step 6: Open the Project in VS Code
+
+Open VS Code.
+
+Select:
+
+```text
+File -> Open Folder
+```
+
+Open:
+
+```text
+C:\FieldMedic
+```
+
+Then select:
+
+```text
+Terminal -> New Terminal
+```
+
+---
+
+# Step 7: Create a Virtual Environment
+
+Run:
+
+```powershell
+python -m venv .venv
+```
+
+Activate it:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+If Windows reports that script execution is disabled, run:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+Then:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+You should eventually see something similar to:
+
+```text
+(.venv) PS C:\FieldMedic>
+```
+
+Do not type:
+
+```text
+(.venv) PS C:\FieldMedic>
+```
+
+yourself.
+
+That is PowerShell's prompt.
+
+---
+
+# Step 8: Upgrade pip
+
+Run:
+
+```powershell
+python -m pip install --upgrade pip
+```
+
+---
+
+# Step 9: Install Dependencies
+
+Run:
+
+```powershell
+pip install -r requirements.txt
+```
+
+A typical FieldMedic `requirements.txt` contains:
+
+```text
+streamlit
+ollama
+pydantic
+python-dotenv
+python-telegram-bot
+elevenlabs
+```
+
+If you are not using ElevenLabs, the voice integration can remain disabled.
+
+The core FieldMedic analysis does not depend on ElevenLabs.
+
+---
+
+# Step 10: Check Offline References
+
+Make sure this directory exists:
+
+```text
+FieldMedic\references\
+```
+
+and contains your local reference material.
+
+For example:
+
+```text
+references/
+|
++-- README.txt
 +-- start_triage_reference.txt
+```
 
-Never include spaces around the = in .env.
+The reference library is part of FieldMedic's offline retrieval system.
 
-14. Protect API Keys
+---
 
-Make sure .gitignore contains:
+# Step 11: Check for Python Syntax Errors
 
-Plain Text
+Before starting the application, run:
+
+```powershell
+python -m py_compile app.py ai.py safety.py references.py telegram_bot.py
+```
+
+If the command returns to the normal PowerShell prompt without displaying anything, Python did not detect a syntax error in those files.
+
+---
+
+# Running FieldMedic
+
+## Step 12: Start the Website
+
+Make sure the virtual environment is active:
+
+```text
+(.venv)
+```
+
+Then run:
+
+```powershell
+streamlit run app.py
+```
+
+Streamlit should open your browser.
+
+If it does not, look for an address similar to:
+
+```text
+http://localhost:8501
+```
+
+Open that address manually.
+
+Keep the terminal open while FieldMedic is running.
+
+To stop Streamlit:
+
+```text
+Ctrl + C
+```
+
+---
+
+# Telegram Setup
+
+Telegram is optional.
+
+Skip this section if you only want to run the web interface.
+
+---
+
+## Step 13: Create a Telegram Bot
+
+Open Telegram.
+
+Find the official BotFather account.
+
+Send:
+
+```text
+/newbot
+```
+
+Follow the prompts to choose:
+
+1. A bot display name
+2. A unique bot username
+
+BotFather will provide a bot token.
+
+Treat this token like a password.
+
+Do not post it on GitHub.
+
+---
+
+# Step 14: Create `.env`
+
+Create:
+
+```text
+.env
+```
+
+inside your main FieldMedic directory.
+
+Add:
+
+```text
+TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_TOKEN
+```
+
+For optional ElevenLabs support:
+
+```text
+ELEVENLABS_API_KEY=YOUR_ELEVENLABS_KEY
+ELEVENLABS_VOICE_ID=YOUR_VOICE_ID
+```
+
+Do not place spaces around `=`.
+
+---
+
+# Step 15: Protect Your Secrets
+
+Your `.gitignore` should include:
+
+```text
 .env
 .venv/
 __pycache__/
 *.pyc
 *.mp3
+```
 
-Before pushing to GitHub, run:
+Before uploading the repository, run:
 
-PowerShell
+```powershell
 git status
+```
 
-Make sure .env DOES NOT appear in the files being committed.
+Verify that:
 
-If a Telegram or ElevenLabs key is accidentally uploaded publicly, revoke it immediately and generate a new one.
+```text
+.env
+```
 
-Running the Telegram Bot
-15. Open a Second Terminal
+does **not** appear in the files being committed.
 
-Keep Streamlit running in the first terminal.
+If a Telegram or ElevenLabs token is accidentally published, revoke it and create a new token.
 
-Open another terminal in VS Code.
+---
 
-Activate the virtual environment again:
+# Step 16: Start the Telegram Bot
 
-PowerShell
+Keep your Streamlit terminal running.
+
+Open a **second VS Code terminal**.
+
+If necessary:
+
+```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
 
-Then:
+Then activate the environment:
 
-PowerShell
+```powershell
 .venv\Scripts\Activate.ps1
+```
 
-Run:
+Start Telegram:
 
-PowerShell
+```powershell
 python telegram_bot.py
+```
 
 You should see:
 
-Plain Text
+```text
 FieldMedic Telegram bot is running.
 Press Ctrl+C to stop it.
+```
 
 Leave this terminal running.
 
-16. Connect to the Bot
+---
 
-Open your bot in Telegram.
+# Step 17: Test Telegram
+
+Open your bot from your phone or Telegram desktop.
 
 Send:
 
-Plain Text
+```text
 /start
+```
 
-The bot should return FieldMedic instructions.
+Then test using synthetic data:
 
-Then try a synthetic example:
-
-Plain Text
+```text
 /analyze age=22; hr=128; rr=28; bp=85/55; o2=94; symptoms=dizzy and confused; injuries=deep leg wound; altered=yes; bleeding=yes
+```
 
-Do not enter real personally identifying patient information into Telegram.
+FieldMedic should send the observations through the local analysis pipeline and return a structured assessment.
 
-Telegram is an online interface even though FieldMedic's AI inference runs locally.
+---
 
-Optional ElevenLabs Voice Setup
+# Optional ElevenLabs Setup
 
-FieldMedic can optionally generate a spoken version of limited assessment information.
+If you want spoken assessment summaries:
 
-Create an ElevenLabs account and obtain an API key.
+1. Obtain an ElevenLabs API key.
+2. Put it in `.env`.
 
-Add it to .env:
-
-Plain Text
+```text
 ELEVENLABS_API_KEY=YOUR_API_KEY
+```
 
-If required by your version of voice.py, also provide:
+If required:
 
-Plain Text
+```text
 ELEVENLABS_VOICE_ID=YOUR_VOICE_ID
+```
 
-Restart Streamlit after changing .env:
+Restart Streamlit after modifying `.env`.
 
-Plain Text
+Stop Streamlit:
+
+```text
 Ctrl + C
+```
 
-Then:
+Restart:
 
-PowerShell
+```powershell
 streamlit run app.py
+```
 
-Voice functionality requires internet connectivity.
+Voice requires internet connectivity.
 
-The core FieldMedic AI does not require ElevenLabs.
+The core FieldMedic analysis does not.
 
-Starting the Full FieldMedic System
+---
 
-After the initial installation, you do not need to repeat all of the setup steps every time.
+# Starting FieldMedic After Initial Installation
 
-Normally, starting FieldMedic requires the following:
+You do not need to repeat the entire installation process every time.
 
-Terminal 1 - Website
-PowerShell
+Normally, you only need the following.
+
+## Terminal 1: Website
+
+```powershell
 cd C:\FieldMedic
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .venv\Scripts\Activate.ps1
 streamlit run app.py
- 
-Terminal 2 - Telegram Bot
-PowerShell
+```
+
+## Terminal 2: Telegram
+
+```powershell
 cd C:\FieldMedic
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .venv\Scripts\Activate.ps1
 python telegram_bot.py
+```
 
-Ollama must also be installed and available on the computer.
+Ollama must also be installed and available.
 
 Verify with:
 
-PowerShell
+```powershell
 ollama list
-Quick System Test
+```
 
-Before a demonstration, test FieldMedic with synthetic data.
+---
 
-Example 1 - Lower-Risk Case
-Plain Text
-Age: 20
-Heart Rate: 78
-Respiratory Rate: 16
-Blood Pressure: 118/76
-Oxygen: 99
- 
+# Demonstration Cases
+
+Use synthetic patient data only.
+
+## Case 1: Lower-Risk Synthetic Case
+
+```text
+Age:
+20
+
 Symptoms:
-Awake and alert with mild left-hand pain.
- 
-Injuries:
-Small superficial scrape on left hand.
- 
+Awake, alert, mild pain in left hand
+
+Heart Rate:
+78
+
+Respiratory Rate:
+16
+
+Blood Pressure:
+118/76
+
+Oxygen Saturation:
+99%
+
+Visible Injuries:
+Small superficial scrape on left hand
+
 Altered Mental Status:
 No
- 
+
 Uncontrolled Bleeding:
 No
-Example 2 - Critical Synthetic Case
-Plain Text
-Age: 22
-Heart Rate: 128
-Respiratory Rate: 28
-Blood Pressure: 85/55
-Oxygen: 94
- 
+```
+
+Telegram:
+
+```text
+/analyze age=20; hr=78; rr=16; bp=118/76; o2=99; symptoms=awake and alert with mild pain in left hand; injuries=small superficial scrape on left hand; altered=no; bleeding=no
+```
+
+The purpose of this case is to show that FieldMedic does not automatically treat every submitted patient as a critical emergency.
+
+---
+
+## Case 2: Critical Synthetic Trauma Case
+
+```text
+Age:
+22
+
 Symptoms:
-Dizzy, pale, confused, and becoming less responsive.
- 
-Injuries:
-Deep leg wound with significant bleeding.
- 
+Dizzy, pale, confused, and becoming less responsive
+
+Heart Rate:
+128
+
+Respiratory Rate:
+28
+
+Blood Pressure:
+85/55
+
+Oxygen Saturation:
+94%
+
+Visible Injuries:
+Deep leg wound with significant bleeding
+
 Altered Mental Status:
 Yes
- 
+
 Uncontrolled Bleeding:
 Yes
+```
 
-These cases are fictional and intended only to test the software.
+Telegram:
 
-Troubleshooting
-python is not recognized
+```text
+/analyze age=22; hr=128; rr=28; bp=85/55; o2=94; symptoms=dizzy, pale, confused, and becoming less responsive; injuries=deep leg wound with significant bleeding; altered=yes; bleeding=yes
+```
 
-Reinstall Python and make sure:
+This synthetic example exercises several FieldMedic safety checks simultaneously.
 
-Plain Text
-Add Python to PATH
+---
 
-is selected during installation.
+# Complete Demonstration Setup
 
-ollama is not recognized
+A complete demonstration can use three terminals/components:
 
-Install Ollama and restart PowerShell or VS Code.
+```text
+                    FieldMedic Demo
+
+                         Ollama
+                           |
+                         Gemma
+                           |
+                 FieldMedic Backend
+                      /         \
+                     /           \
+            Streamlit             Telegram
+            Website                 Bot
+               |                     |
+             Laptop                 Phone
+```
+
+### Before presenting
+
+Check Ollama:
+
+```powershell
+ollama list
+```
+
+Start Streamlit:
+
+```powershell
+streamlit run app.py
+```
+
+Start Telegram in another terminal:
+
+```powershell
+python telegram_bot.py
+```
 
 Then test:
 
-PowerShell
-ollama --version
-Model Not Found
+```text
+Website -> Synthetic Case 1
+Website -> Synthetic Case 2
+Telegram -> /start
+Telegram -> Synthetic Case 2
+```
 
-If you see:
+---
 
-Plain Text
-model 'gemma4' not found
+# Troubleshooting
 
-run:
+## Python Is Not Recognized
 
-PowerShell
-ollama pull gemma4
+If:
 
-Verify:
+```text
+python is not recognized
+```
 
-PowerShell
-ollama list
+appears, reinstall Python and enable:
 
-The name inside ai.py must match the installed Ollama model.
+```text
+Add Python to PATH
+```
 
-PowerShell Blocks .venv
+during installation.
 
-Run:
+---
 
-PowerShell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+## Ollama Is Not Recognized
+
+Restart VS Code or PowerShell after installing Ollama.
 
 Then:
 
-PowerShell
+```powershell
+ollama --version
+```
+
+---
+
+## Model Not Found
+
+If you see:
+
+```text
+model 'gemma4' not found
+```
+
+check:
+
+```powershell
+ollama list
+```
+
+If Gemma is missing:
+
+```powershell
+ollama pull gemma4
+```
+
+The model name configured inside `ai.py` must exactly match an installed Ollama model.
+
+---
+
+# PowerShell Says Scripts Are Disabled
+
+Run:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+Then:
+
+```powershell
 .venv\Scripts\Activate.ps1
-Telegram Token Missing
+```
+
+This changes the policy only for the current PowerShell process.
+
+---
+
+# Telegram Token Is Missing
 
 Check that:
 
-Plain Text
+```text
 .env
- 
+```
 
-exists in the main FieldMedic directory.
+exists directly inside the FieldMedic project directory.
 
-It should contain:
+It needs:
 
-Plain Text
+```text
 TELEGRAM_BOT_TOKEN=YOUR_TOKEN
- 
+```
 
 Then restart:
 
-PowerShell
+```powershell
 python telegram_bot.py
-Telegram Works but AI Analysis Fails
+```
 
-First verify Ollama:
+---
 
-PowerShell
+# Telegram Works but Analysis Fails
+
+First test Ollama:
+
+```powershell
 ollama list
+```
 
-Then test the model directly:
+Then test Gemma directly:
 
-PowerShell
+```powershell
 ollama run gemma4
+```
 
-If the model works directly but FieldMedic does not, verify that ai.py uses the exact same model name.
+If Gemma works directly but FieldMedic does not, check the model configured inside:
 
-Streamlit Port Is Already Being Used
+```text
+ai.py
+```
 
-First stop any older Streamlit terminal with:
+It must match the name displayed by:
 
-Plain Text
+```powershell
+ollama list
+```
+
+---
+
+# Windows Path-Length Error
+
+If a dependency produces a Windows long-path error, the project path may be too long.
+
+Instead of:
+
+```text
+C:\Users\Username\OneDrive - Organization\Documents\FieldMedic
+```
+
+move the project to:
+
+```text
+C:\FieldMedic
+```
+
+Delete the old `.venv`, create a new one, activate it, and reinstall dependencies:
+
+```powershell
+python -m venv .venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+---
+
+# Streamlit Is Already Running
+
+Stop the existing instance by clicking its terminal and pressing:
+
+```text
 Ctrl + C
+```
 
 Then restart:
 
-PowerShell
+```powershell
 streamlit run app.py
-Important Privacy Information
+```
 
-The FieldMedic architecture contains both local and connected components.
+---
 
-LOCAL:
+# Privacy
 
-Plain Text
+FieldMedic contains both local and connected components.
+
+## Local
+
+```text
 Gemma inference
 Ollama
-Safety checks
+Python safety engine
 Offline reference retrieval
 Local Streamlit interface
+```
 
-CONNECTED:
+## Connected
 
-Plain Text
+```text
 Telegram
 ElevenLabs
+```
 
-Therefore, do not claim that the entire FieldMedic system is offline when using Telegram or ElevenLabs.
+The correct description is:
 
-A more accurate description is:
+> FieldMedic's core AI inference, deterministic safety system, and reference retrieval can run locally while Telegram and ElevenLabs provide optional connected interfaces.
 
-FieldMedic's core AI inference, safety system, and reference retrieval can operate locally, while Telegram and ElevenLabs are optional connected interfaces.
+Do not enter personally identifiable healthcare information into the demonstration system.
+
+---
+
+# Limitations
+
+FieldMedic is an experimental educational and competition prototype.
+
+It:
+
+- Is not a medical device
+- Is not clinically validated
+- Does not provide confirmed diagnoses
+- Should not autonomously make treatment decisions
+- Should not replace trained responders
+- Should not replace emergency medical services
+- Can produce incorrect AI-generated information
+- Depends on the accuracy of information supplied by the user
+- Depends on the quality of its local reference library
+- Has not been validated for real-world clinical deployment
+
+FieldMedic should currently be evaluated as a demonstration of:
+
+- Local open-weight AI
+- Deterministic safety logic
+- Retrieval-Augmented Generation
+- Structured AI output
+- Offline-first system design
+- Disaster-response human-computer interaction
+
+---
+
+# Future Improvements
+
+Potential future work includes:
+
+- Vector-based offline RAG
+- Larger authoritative reference libraries
+- Fully offline speech-to-text
+- Fully offline text-to-speech
+- Multilingual responder support
+- Dedicated offline mobile application
+- Reassessment tracking
+- Multiple-patient incident dashboard
+- Resource availability tracking
+- Patient handoff reports
+- Offline mesh networking
+- Model uncertainty visualization
+- Evaluation against standardized synthetic scenarios
+- Formal review by emergency medicine professionals
+- Formal review by disaster-response professionals
+
+---
+
+# Setup Checklist
+
+Before running FieldMedic, confirm:
+
+- [ ] Python is installed
+- [ ] Git is installed if cloning the repository
+- [ ] Ollama is installed
+- [ ] Gemma is downloaded
+- [ ] `ollama list` displays the correct model
+- [ ] The FieldMedic repository is downloaded
+- [ ] `.venv` has been created
+- [ ] `.venv` is activated
+- [ ] Python dependencies are installed
+- [ ] `references/` exists
+- [ ] Offline reference files are present
+- [ ] `ai.py` specifies the correct Ollama model
+- [ ] Streamlit launches successfully
+- [ ] `.env` is excluded from Git
+- [ ] Telegram token is configured if using Telegram
+- [ ] Telegram `/start` works
+- [ ] Telegram `/analyze` works
+- [ ] ElevenLabs is configured only if voice is desired
+- [ ] Synthetic cases have been tested
+
+---
+
+# Why FieldMedic?
+
+Most AI applications assume there will always be connectivity.
+
+Disasters cannot make that assumption.
+
+FieldMedic explores a different question:
+
+> **What if useful AI decision support could remain available when the network and normal infrastructure are not?**
+
+By combining local open-weight AI, deterministic safety checks, offline reference retrieval, and responder-focused interfaces, FieldMedic explores how useful AI capabilities might remain accessible in infrastructure-constrained environments.
+
+---
+
+# Disclaimer
+
+**FieldMedic is an educational and competition prototype only.**
+
+It is not intended for clinical use, diagnosis, treatment, autonomous triage, or autonomous medical decision-making.
+
+Never delay or replace professional emergency medical care based on FieldMedic output.
+
+For real emergencies, contact the appropriate emergency services and follow established local emergency-response protocols.
