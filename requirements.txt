@@ -1,0 +1,6 @@
+streamlit
+ollama
+pydantic
+python-dotenv
+python-telegram-bot
+elevenlabs
